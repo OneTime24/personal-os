@@ -3,49 +3,69 @@ import { useEffect, useMemo, useState } from "react";
 import Card from "../components/Card";
 import PageHeader from "../components/PageHeader";
 import StatCard from "../components/StatCard";
+import TaskCard from "../components/TaskCard";
 
 function Dashboard() {
   const [schedules, setSchedules] = useState([]);
 
-  const today = new Date().toLocaleDateString("en-US", {
+  const today = new Date();
+
+  const todayShort = today.toLocaleDateString("en-US", {
     weekday: "short",
   });
 
-  const todayKey = new Date().toISOString().split("T")[0];
+  const todayDate = today.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const hour = today.getHours();
+
+  let greeting = "Good Evening 🌙";
+
+  if (hour < 12) {
+    greeting = "Good Morning ☀️";
+  } else if (hour < 18) {
+    greeting = "Good Afternoon 🌤️";
+  }
+
+  const todayKey = today.toISOString().split("T")[0];
 
   const [completedTasks, setCompletedTasks] = useState(() => {
     const saved = localStorage.getItem("dailyCompletions");
 
     if (!saved) return {};
 
-    const allCompletions = JSON.parse(saved);
+    const all = JSON.parse(saved);
 
-    return allCompletions[todayKey] || {};
+    return all[todayKey] || {};
   });
 
   useEffect(() => {
-    const savedSchedules = localStorage.getItem("schedules");
+    const saved = localStorage.getItem("schedules");
 
-    if (savedSchedules) {
-      setSchedules(JSON.parse(savedSchedules));
+    if (saved) {
+      setSchedules(JSON.parse(saved));
     }
   }, []);
 
   useEffect(() => {
-    const allCompletions = JSON.parse(
+    const all = JSON.parse(
       localStorage.getItem("dailyCompletions") || "{}"
     );
 
-    allCompletions[todayKey] = completedTasks;
+    all[todayKey] = completedTasks;
 
     localStorage.setItem(
       "dailyCompletions",
-      JSON.stringify(allCompletions)
+      JSON.stringify(all)
     );
   }, [completedTasks, todayKey]);
 
   const todaysSchedules = schedules.filter((schedule) =>
-    schedule.repeatDays.includes(today)
+    schedule.repeatDays.includes(todayShort)
   );
 
   const completedCount = useMemo(() => {
@@ -71,8 +91,8 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Good Morning 👋"
-        subtitle="Welcome back to PersonalOS."
+        title={greeting}
+        subtitle={todayDate}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -97,15 +117,17 @@ function Dashboard() {
           Today's Progress
         </h2>
 
-        <div className="w-full h-3 bg-slate-200 rounded-full mt-5">
+        <div className="w-full h-3 rounded-full bg-slate-200 mt-5">
           <div
-            className="bg-blue-600 h-3 rounded-full transition-all"
-            style={{ width: `${progress}%` }}
+            className="h-3 rounded-full bg-blue-600 transition-all duration-300"
+            style={{
+              width: `${progress}%`,
+            }}
           />
         </div>
 
         <p className="mt-3 text-slate-500">
-          {completedCount} / {todaysSchedules.length} completed
+          {completedCount} of {todaysSchedules.length} completed
         </p>
       </Card>
 
@@ -115,39 +137,18 @@ function Dashboard() {
         </h2>
 
         {todaysSchedules.length === 0 ? (
-          <p className="text-slate-500">
-            No tasks scheduled for today.
-          </p>
+          <div className="text-center py-10 text-slate-500">
+            🎉 Nothing scheduled for today.
+          </div>
         ) : (
           <div className="space-y-4">
             {todaysSchedules.map((task) => (
-              <label
+              <TaskCard
                 key={task.id}
-                className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={completedTasks[task.id] || false}
-                  onChange={() => toggleTask(task.id)}
-                  className="w-5 h-5"
-                />
-
-                <div className="flex-1">
-                  <h3
-                    className={`font-semibold ${
-                      completedTasks[task.id]
-                        ? "line-through text-slate-400"
-                        : ""
-                    }`}
-                  >
-                    {task.title}
-                  </h3>
-
-                  <p className="text-sm text-slate-500">
-                    {task.startTime} → {task.endTime}
-                  </p>
-                </div>
-              </label>
+                task={task}
+                completed={completedTasks[task.id] || false}
+                onToggle={toggleTask}
+              />
             ))}
           </div>
         )}
@@ -157,4 +158,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-
