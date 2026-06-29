@@ -67,7 +67,10 @@ function Schedule() {
         title="Schedule"
         subtitle="Manage your recurring schedules."
       >
-        <Button onClick={openCreateModal}>
+        <Button
+  onClick={openCreateModal}
+  className="w-full md:w-auto"
+>
           + Add Schedule
         </Button>
       </PageHeader>
