@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Button from "../components/Button";
 import Modal from "../components/Modal";
@@ -6,9 +6,21 @@ import PageHeader from "../components/PageHeader";
 import ScheduleForm from "../components/ScheduleForm";
 import ScheduleCard from "../components/ScheduleCard";
 
+
 function Schedule() {
-  const [schedules, setSchedules] = useState([]);
+  const [schedules, setSchedules] = useState(() => {
+  const savedSchedules = localStorage.getItem("schedules");
+
+  return savedSchedules ? JSON.parse(savedSchedules) : [];
+});
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+  localStorage.setItem(
+    "schedules",
+    JSON.stringify(schedules)
+  );
+}, [schedules]);
 
   function addSchedule(schedule) {
     setSchedules((prev) => [...prev, schedule]);
