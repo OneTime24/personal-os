@@ -1,37 +1,28 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import Card from "../components/Card";
 import PageHeader from "../components/PageHeader";
 import StatCard from "../components/StatCard";
 import TaskCard from "../components/TaskCard";
 
+import {
+  getCompletedCount,
+  getProgress,
+  getTodaysSchedules,
+} from "../utils/dashboard";
+
+import {
+  getGreeting,
+  getTodayDate,
+  getTodayKey,
+} from "../utils/date";
+
 function Dashboard() {
   const [schedules, setSchedules] = useState([]);
 
-  const today = new Date();
-
-  const todayShort = today.toLocaleDateString("en-US", {
-    weekday: "short",
-  });
-
-  const todayDate = today.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const hour = today.getHours();
-
-  let greeting = "Good Evening 🌙";
-
-  if (hour < 12) {
-    greeting = "Good Morning ☀️";
-  } else if (hour < 18) {
-    greeting = "Good Afternoon 🌤️";
-  }
-
-  const todayKey = today.toISOString().split("T")[0];
+  const greeting = getGreeting();
+  const todayDate = getTodayDate();
+  const todayKey = getTodayKey();
 
   const [completedTasks, setCompletedTasks] = useState(() => {
     const saved = localStorage.getItem("dailyCompletions");
@@ -64,22 +55,17 @@ function Dashboard() {
     );
   }, [completedTasks, todayKey]);
 
-  const todaysSchedules = schedules.filter((schedule) =>
-    schedule.repeatDays.includes(todayShort)
+  const todaysSchedules = getTodaysSchedules(schedules);
+
+  const completedCount = getCompletedCount(
+    todaysSchedules,
+    completedTasks
   );
 
-  const completedCount = useMemo(() => {
-    return todaysSchedules.filter(
-      (task) => completedTasks[task.id]
-    ).length;
-  }, [todaysSchedules, completedTasks]);
-
-  const progress =
-    todaysSchedules.length === 0
-      ? 0
-      : Math.round(
-          (completedCount / todaysSchedules.length) * 100
-        );
+  const progress = getProgress(
+    todaysSchedules,
+    completedTasks
+  );
 
   function toggleTask(id) {
     setCompletedTasks((prev) => ({
