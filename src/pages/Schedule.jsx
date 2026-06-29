@@ -3,34 +3,62 @@ import { useEffect, useState } from "react";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
-import ScheduleForm from "../components/ScheduleForm";
 import ScheduleCard from "../components/ScheduleCard";
-
+import ScheduleForm from "../components/ScheduleForm";
 
 function Schedule() {
   const [schedules, setSchedules] = useState(() => {
-  const savedSchedules = localStorage.getItem("schedules");
+    const saved = localStorage.getItem("schedules");
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  return savedSchedules ? JSON.parse(savedSchedules) : [];
-});
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState(null);
 
   useEffect(() => {
-  localStorage.setItem(
-    "schedules",
-    JSON.stringify(schedules)
-  );
-}, [schedules]);
+    localStorage.setItem(
+      "schedules",
+      JSON.stringify(schedules)
+    );
+  }, [schedules]);
 
-  function addSchedule(schedule) {
+  function handleCreate(schedule) {
     setSchedules((prev) => [...prev, schedule]);
     setIsModalOpen(false);
   }
 
-  function deleteSchedule(id) {
+  function handleUpdate(updatedSchedule) {
+    setSchedules((prev) =>
+      prev.map((schedule) =>
+        schedule.id === updatedSchedule.id
+          ? updatedSchedule
+          : schedule
+      )
+    );
+
+    setEditingSchedule(null);
+    setIsModalOpen(false);
+  }
+
+  function handleDelete(id) {
     setSchedules((prev) =>
       prev.filter((schedule) => schedule.id !== id)
     );
+  }
+
+  function openCreateModal() {
+    setEditingSchedule(null);
+    setIsModalOpen(true);
+  }
+
+  function openEditModal(schedule) {
+    setEditingSchedule(schedule);
+    setIsModalOpen(true);
+  }
+
+  function closeModal() {
+    setEditingSchedule(null);
+    setIsModalOpen(false);
   }
 
   return (
@@ -39,7 +67,7 @@ function Schedule() {
         title="Schedule"
         subtitle="Manage your recurring schedules."
       >
-        <Button onClick={() => setIsModalOpen(true)}>
+        <Button onClick={openCreateModal}>
           + Add Schedule
         </Button>
       </PageHeader>
@@ -60,7 +88,8 @@ function Schedule() {
             <ScheduleCard
               key={schedule.id}
               schedule={schedule}
-              onDelete={deleteSchedule}
+              onEdit={openEditModal}
+              onDelete={handleDelete}
             />
           ))}
         </div>
@@ -68,10 +97,22 @@ function Schedule() {
 
       <Modal
         isOpen={isModalOpen}
-        title="Create Schedule"
-        onClose={() => setIsModalOpen(false)}
+        title={
+          editingSchedule
+            ? "Edit Schedule"
+            : "Create Schedule"
+        }
+        onClose={closeModal}
       >
-        <ScheduleForm onSubmit={addSchedule} />
+        <ScheduleForm
+          initialData={editingSchedule}
+          onSubmit={
+            editingSchedule
+              ? handleUpdate
+              : handleCreate
+          }
+          onCancel={closeModal}
+        />
       </Modal>
     </div>
   );

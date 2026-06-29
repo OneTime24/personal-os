@@ -1,6 +1,10 @@
 import Button from "./Button";
 
-function ScheduleCard({ schedule, onDelete }) {
+function ScheduleCard({
+  schedule,
+  onEdit,
+  onDelete,
+}) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
       <div className="flex justify-between items-start">
@@ -13,36 +17,42 @@ function ScheduleCard({ schedule, onDelete }) {
             {schedule.category}
           </p>
         </div>
-
-        <Button
-          variant="danger"
-          onClick={() => onDelete(schedule.id)}
-        >
-          Delete
-        </Button>
       </div>
 
-      <div className="mt-5 space-y-3">
+      <div className="mt-5">
         <p>
-          <span className="font-medium">Time:</span>{" "}
+          <span className="font-medium">
+            Time:
+          </span>{" "}
           {schedule.startTime} → {schedule.endTime}
         </p>
 
-        <div>
-          <p className="font-medium mb-2">
-            Repeat
-          </p>
+        <div className="flex flex-wrap gap-2 mt-3">
+          {schedule.repeatDays.map((day) => (
+            <span
+              key={day}
+              className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
+            >
+              {day}
+            </span>
+          ))}
+        </div>
 
-          <div className="flex flex-wrap gap-2">
-            {schedule.repeatDays.map((day) => (
-              <span
-                key={day}
-                className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
-              >
-                {day}
-              </span>
-            ))}
-          </div>
+        <div className="flex gap-3 mt-6">
+          <Button
+            onClick={() => onEdit(schedule)}
+          >
+            Edit
+          </Button>
+
+          <Button
+            variant="danger"
+            onClick={() =>
+              onDelete(schedule.id)
+            }
+          >
+            Delete
+          </Button>
         </div>
       </div>
     </div>

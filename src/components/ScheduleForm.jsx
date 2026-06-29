@@ -1,56 +1,77 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "./Button";
 
-function ScheduleForm({ onSubmit }) {
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("Study");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [repeatDays, setRepeatDays] = useState([]);
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DEFAULT_FORM = {
+  title: "",
+  category: "Study",
+  startTime: "",
+  endTime: "",
+  repeatDays: [],
+};
+
+function ScheduleForm({
+  initialData = null,
+  onSubmit,
+  onCancel,
+}) {
+  const [formData, setFormData] = useState(DEFAULT_FORM);
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    } else {
+      setFormData(DEFAULT_FORM);
+    }
+  }, [initialData]);
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
 
   function toggleDay(day) {
-    if (repeatDays.includes(day)) {
-      setRepeatDays(repeatDays.filter((d) => d !== day));
-    } else {
-      setRepeatDays([...repeatDays, day]);
-    }
+    setFormData((prev) => ({
+      ...prev,
+      repeatDays: prev.repeatDays.includes(day)
+        ? prev.repeatDays.filter((d) => d !== day)
+        : [...prev.repeatDays, day],
+    }));
   }
 
   function handleSubmit(e) {
     e.preventDefault();
 
     if (
-      !title.trim() ||
-      !startTime ||
-      !endTime ||
-      repeatDays.length === 0
+      !formData.title.trim() ||
+      !formData.startTime ||
+      !formData.endTime ||
+      formData.repeatDays.length === 0
     ) {
-      alert("Please fill in all required fields.");
+      alert("Please complete all required fields.");
       return;
     }
 
     onSubmit({
-      id: crypto.randomUUID(),
-      title,
-      category,
-      startTime,
-      endTime,
-      repeatDays,
+      ...formData,
+      id: initialData?.id ?? crypto.randomUUID(),
     });
 
-    // Reset form
-    setTitle("");
-    setCategory("Study");
-    setStartTime("");
-    setEndTime("");
-    setRepeatDays([]);
+    if (!initialData) {
+      setFormData(DEFAULT_FORM);
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Task Name */}
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-5"
+    >
       <div>
         <label className="block mb-2 font-medium">
           Task Name
@@ -58,22 +79,22 @@ function ScheduleForm({ onSubmit }) {
 
         <input
           type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Deep Work"
+          name="title"
+          value={formData.title}
+          onChange={handleChange}
           className="w-full border rounded-xl p-3"
         />
       </div>
 
-      {/* Category */}
       <div>
         <label className="block mb-2 font-medium">
           Category
         </label>
 
         <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          name="category"
+          value={formData.category}
+          onChange={handleChange}
           className="w-full border rounded-xl p-3"
         >
           <option>Study</option>
@@ -85,7 +106,6 @@ function ScheduleForm({ onSubmit }) {
         </select>
       </div>
 
-      {/* Time */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block mb-2 font-medium">
@@ -94,8 +114,9 @@ function ScheduleForm({ onSubmit }) {
 
           <input
             type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
+            name="startTime"
+            value={formData.startTime}
+            onChange={handleChange}
             className="w-full border rounded-xl p-3"
           />
         </div>
@@ -107,29 +128,29 @@ function ScheduleForm({ onSubmit }) {
 
           <input
             type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
+            name="endTime"
+            value={formData.endTime}
+            onChange={handleChange}
             className="w-full border rounded-xl p-3"
           />
         </div>
       </div>
 
-      {/* Repeat Days */}
       <div>
         <label className="block mb-2 font-medium">
           Repeat Days
         </label>
 
         <div className="flex flex-wrap gap-2">
-          {days.map((day) => (
+          {DAYS.map((day) => (
             <button
               key={day}
               type="button"
               onClick={() => toggleDay(day)}
               className={`px-4 py-2 rounded-xl border transition ${
-                repeatDays.includes(day)
+                formData.repeatDays.includes(day)
                   ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white"
+                  : ""
               }`}
             >
               {day}
@@ -138,9 +159,20 @@ function ScheduleForm({ onSubmit }) {
         </div>
       </div>
 
-      <Button type="submit">
-        Save Schedule
-      </Button>
+      <div className="flex justify-end gap-3 pt-2">
+        {onCancel && (
+          <Button
+            type="button"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+        )}
+
+        <Button type="submit">
+          {initialData ? "Update Schedule" : "Save Schedule"}
+        </Button>
+      </div>
     </form>
   );
 }
