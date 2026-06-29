@@ -1,63 +1,77 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import Button from "../components/Button";
 import Card from "../components/Card";
-import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import StatCard from "../components/StatCard";
 
 function Dashboard() {
-  const [open, setOpen] = useState(false);
+  const [schedules, setSchedules] = useState([]);
 
+  useEffect(() => {
+    const savedSchedules = localStorage.getItem("schedules");
+
+    if (savedSchedules) {
+      setSchedules(JSON.parse(savedSchedules));
+    }
+  }, []);
+
+  const today = new Date().toLocaleDateString("en-US", {
+  weekday: "short",
+});
+
+const todaysSchedules = schedules.filter((schedule) =>
+  schedule.repeatDays.includes(today)
+);
   return (
     <div className="space-y-6">
       <PageHeader
         title="Good Morning 👋"
         subtitle="Welcome back to PersonalOS."
-      >
-        <Button onClick={() => setOpen(true)}>
-          Add Schedule
-        </Button>
-      </PageHeader>
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <StatCard title="Tasks Today" value="0" />
-        <StatCard title="Completion" value="0%" />
+        <StatCard
+          title="Schedules"
+          value={schedules.length}
+        />
+
+        <StatCard
+          title="Today's Tasks"
+          value={todaysSchedules.length}
+        />
       </div>
 
       <Card>
-        <h2 className="text-xl font-semibold">
-          Today's Progress
+        <h2 className="text-xl font-semibold mb-4">
+       Today's Tasks
         </h2>
+        {todaysSchedules.length === 0 ? (
+          <p className="text-slate-500">
+            No tasks scheduled for today.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {todaysSchedules.map((schedule) => (
+              <div
+                key={schedule.id}
+                className="border rounded-xl p-4"
+              >
+                <h3 className="font-semibold">
+                  {schedule.title}
+                </h3>
 
-        <div className="w-full bg-slate-200 rounded-full h-3 mt-6">
-          <div className="bg-blue-600 h-3 rounded-full w-0"></div>
-        </div>
+                <p className="text-slate-500 text-sm">
+                  {schedule.startTime} → {schedule.endTime}
+                </p>
 
-        <p className="text-slate-500 mt-4">
-          No tasks yet.
-        </p>
+                <p className="text-sm mt-2">
+                  {schedule.repeatDays.join(", ")}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
-
-      <Card>
-        <h2 className="text-xl font-semibold">
-          Upcoming Tasks
-        </h2>
-
-        <p className="text-slate-500 mt-4">
-          No upcoming tasks.
-        </p>
-      </Card>
-
-      <Modal
-        isOpen={open}
-        title="Create Schedule"
-        onClose={() => setOpen(false)}
-      >
-        <p className="text-slate-500">
-          Form coming in the next milestone...
-        </p>
-      </Modal>
     </div>
   );
 }
